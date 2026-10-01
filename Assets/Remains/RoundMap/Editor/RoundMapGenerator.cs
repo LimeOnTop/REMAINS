@@ -19,7 +19,9 @@ namespace Remains.Editor
         [Tooltip("Height of the hills on the plateau, metres")] public float HillHeight = 7f;
         [Tooltip("Water level of the river, metres")] public float WaterLevel = 37f;
         [Tooltip("Lava level at the bottom of the cliff, metres")] public float LavaLevel = 6f;
-        [Tooltip("Average radius of the river loop around the castle, metres")] public float RiverRadius = 128f;
+        [Tooltip("River width at the water line, metres")] public float RiverWidth = 34f;
+        [Tooltip("Average gap between the castle walls and the river bank, metres")] public float RiverGap = 22f;
+        [Tooltip("Bridge width, metres")] public float BridgeWidth = 14f;
         [Tooltip("Average radius of the castle wall ring, metres")] public float CastleRadius = 70f;
         [Tooltip("Number of castle corners (towers)")] public int CastleCorners = 9;
         [Tooltip("How far each castle corner may stray from the circle, metres")] public float CastleIrregularity = 13f;
@@ -48,7 +50,9 @@ namespace Remains.Editor
         private static List<Vector2> s_River;
         private static List<Vector2> s_Path;
         private static Vector2[] s_Castle;
-        private static Vector2 s_GatePoint, s_GateDir;
+        private static Vector2 s_GatePoint, s_GateDir, s_BridgeStart, s_BridgeEnd;
+        private static float s_RiverApprox;
+        private const float k_GateApron = 9f; // the barbican sticks this far out of the wall; the bridge starts there
         private static float[] s_RimNoise;
 
         private static float Rand() => (float)s_Rng.NextDouble();
@@ -116,6 +120,23 @@ namespace Remains.Editor
             return InsideCastle(p) ? -best : best;
         }
 
+        private static float CastleRadiusAt(float angle)
+        {
+            // Distance from the castle centre (origin) to its wall along a ray.
+            var d = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+            float best = s.CastleRadius;
+            for (int i = 0; i < s_Castle.Length; i++)
+            {
+                var a = s_Castle[i]; var e = s_Castle[(i + 1) % s_Castle.Length] - a;
+                float den = d.x * e.y - d.y * e.x;
+                if (Mathf.Abs(den) < 1e-5f) continue;
+                float t = (a.x * e.y - a.y * e.x) / den;      // along the ray
+                float u = (a.x * d.y - a.y * d.x) / den;      // along the edge
+                if (t > 0f && u >= 0f && u <= 1f) best = t;
+            }
+            return best;
+        }
+
         private static void BuildLayout()
         {
             // Irregular castle outline: corners on a jittered circle.
@@ -141,29 +162,52 @@ namespace Remains.Editor
                 }
             }
 
-            // River: a wobbly loop around the castle plus an inflow (north-west) and an outflow (north-east) to the cliff.
-            s_River = new List<Vector2>();
-            for (int i = 0; i < 420; i++)
+            // River: a wobbly loop that follows the castle outline and runs right past the gate,
+            // plus an inflow (north-west) and an outflow (north-east) to the cliff.
+            float half = s.RiverWidth * 0.5f;
+            float gateAngle = Mathf.Atan2(s_GatePoint.y, s_GatePoint.x);
+            float LoopRadius(float a)
             {
-                float a = i / 420f * Mathf.PI * 2f;
-                float r = s.RiverRadius + 12f * Mathf.Sin(3f * a + 0.7f) + 7f * Mathf.Sin(5f * a + 2f) + 4f * Mathf.Sin(9f * a);
-                s_River.Add(new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r);
+                float general = s.RiverGap + half + 9f * Mathf.Sin(3f * a + 0.7f) + 5f * Mathf.Sin(5f * a + 2f) + 3f * Mathf.Sin(9f * a);
+                general = Mathf.Max(general, half + 10f);
+                float atGate = k_GateApron + half + 4f;
+                float da = Mathf.DeltaAngle(a * Mathf.Rad2Deg, gateAngle * Mathf.Rad2Deg) * Mathf.Deg2Rad;
+                return CastleRadiusAt(a) + Mathf.Lerp(general, atGate, Mathf.Exp(-da * da / (0.45f * 0.45f)));
             }
+            s_River = new List<Vector2>();
+            for (int i = 0; i < 480; i++)
+            {
+                float a = i / 480f * Mathf.PI * 2f;
+                s_River.Add(new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * LoopRadius(a));
+            }
+            s_RiverApprox = s.CastleRadius + s.RiverGap + half;
             foreach (var angle in new[] { 2.45f, 0.75f })
             {
                 for (int i = 0; i <= 120; i++)
                 {
                     float t = i / 120f;
-                    float r = Mathf.Lerp(s.RiverRadius + 8f, RimRadius(angle) + 30f, t);
+                    float r = Mathf.Lerp(LoopRadius(angle), RimRadius(angle) + 30f, t);
                     float a = angle + 0.18f * Mathf.Sin(t * 9f) * t;
                     s_River.Add(new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r);
                 }
             }
 
-            // Winding path from the southern rim to the gate.
+            // Bridge: straight out of the gate, perpendicular to the wall, until past the far bank.
+            s_BridgeStart = s_GatePoint + s_GateDir * k_GateApron;
+            bool wet = false;
+            float end = k_GateApron + s.RiverWidth;
+            for (float t = k_GateApron; t < k_GateApron + 150f; t += 0.5f)
+            {
+                float d = DistanceToPolyline(s_River, s_GatePoint + s_GateDir * t, 80f);
+                if (!wet && d < half) wet = true;
+                if (wet && d > half + 1f) { end = t + 3f; break; }
+            }
+            s_BridgeEnd = s_GatePoint + s_GateDir * end;
+
+            // Winding path from the southern rim to the outer end of the bridge.
             s_Path = new List<Vector2>();
             var from = new Vector2(10f, -RimRadius(-Mathf.PI / 2f) + 10f);
-            var to = s_GatePoint + s_GateDir * 6f;
+            var to = s_BridgeEnd + s_GateDir * 2f;
             for (int i = 0; i <= 260; i++)
             {
                 float t = i / 260f;
@@ -193,7 +237,7 @@ namespace Remains.Editor
             h = Mathf.Max(h, s.WaterLevel + 1.2f);
 
             // River channel.
-            float river = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((riverDist - 6f) / 16f));
+            float river = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((riverDist - s.RiverWidth * 0.5f + 3f) / 10f));
             h = Mathf.Lerp(h, s.WaterLevel - 3.5f, river);
             // Path: a shallow worn track.
             float path = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((pathDist - 2.5f) / 3f));
@@ -588,17 +632,17 @@ namespace Remains.Editor
 
         private static void BuildBridge()
         {
-            // The path point closest to the river loop is the crossing.
-            int best = 0; float bestD = float.MaxValue;
-            for (int i = 0; i < s_Path.Count; i++)
-            {
-                float rd = DistanceToPolyline(s_River, s_Path[i], 60f);
-                if (rd < bestD) { bestD = rd; best = i; }
-            }
-            var p = s_Path[best];
-            var dir = (s_Path[Mathf.Min(best + 3, s_Path.Count - 1)] - s_Path[Mathf.Max(best - 3, 0)]).normalized;
-            // Drawbridge model is long along X: turn it to the path and stretch it over the river.
-            var bridge = Place("Drawbridge", "Castle/Gate", p, YawOf(dir) + 90f, new Vector3(52f, 14f, 30f), 0f, s.WaterLevel + 0.4f);
+            // From the barbican straight out over the river to the far bank, sloping between the two bank heights.
+            var a = new Vector3(s_BridgeStart.x, Ground(s_BridgeStart), s_BridgeStart.y);
+            var b = new Vector3(s_BridgeEnd.x, Ground(s_BridgeEnd), s_BridgeEnd.y);
+            float length = Vector2.Distance(s_BridgeStart, s_BridgeEnd);
+            // The drawbridge model is 0.58 long on X and 0.41 wide on Z: stretch it to the span and the bridge width.
+            var x = -(b - a).normalized;
+            var z = Vector3.Cross(x, Vector3.up).normalized;
+            var y = Vector3.Cross(z, x);
+            var mid = (s_BridgeStart + s_BridgeEnd) * 0.5f;
+            var bridge = Place("Drawbridge", "Castle/Gate", mid, 0f, new Vector3(length / 0.58f, 12f, s.BridgeWidth / 0.41f), 0f, (a.y + b.y) * 0.5f - 0.4f);
+            bridge.transform.rotation = Quaternion.LookRotation(z, y);
             bridge.name = "Bridge_River";
         }
 
@@ -667,7 +711,7 @@ namespace Remains.Editor
             for (int i = 0; i < 30; i++)
             {
                 float a = Rand(0f, Mathf.PI * 2f);
-                float r = Rand(s.RiverRadius + 25f, RimRadius(a) - 20f);
+                float r = Rand(s_RiverApprox + 25f, RimRadius(a) - 20f);
                 var p = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
                 if (DistanceToPolyline(s_Path, p, 30f) < 12f) continue;
                 Rock(p, Rand(2f, 5f), 0.3f);
@@ -741,7 +785,7 @@ namespace Remains.Editor
 
                     float rock = Mathf.Clamp01((slope - 34f) / 12f);
                     rock = Mathf.Max(rock, Mathf.Clamp01(cliffT[hz, hx] * 3f));
-                    float mud = Mathf.Clamp01((14f - riverD[hz, hx]) / 5f) * (1f - rock);
+                    float mud = Mathf.Clamp01((s.RiverWidth * 0.5f + 4f - riverD[hz, hx]) / 5f) * (1f - rock);
                     float dirt = Mathf.Clamp01((4.5f - pathD[hz, hx]) / 2f) * (1f - rock);
                     float edge = DistanceToCastleEdge(p);
                     float cobble = Mathf.Clamp01((-edge - 2f) / 6f) * (1f - rock);
@@ -810,7 +854,7 @@ namespace Remains.Editor
             var trees = new List<TreeInstance>();
             bool FreeSpot(Vector2 p)
             {
-                if (DistanceToPolyline(s_River, p, 30f) < 19f || DistanceToPolyline(s_Path, p, 20f) < 12f) return false;
+                if (DistanceToPolyline(s_River, p, 60f) < s.RiverWidth * 0.5f + 8f || DistanceToPolyline(s_Path, p, 20f) < 12f) return false;
                 if (DistanceToCastleEdge(p) < 22f) return false;
                 if (p.magnitude > RimRadius(Mathf.Atan2(p.y, p.x)) - 10f) return false;
                 foreach (var camp in new[] { new Vector2(55f, -228f), new Vector2(-228f, -40f), new Vector2(225f, -25f), new Vector2(190f, 95f), new Vector2(200f, -105f) })
@@ -830,7 +874,7 @@ namespace Remains.Editor
             {
                 // Western forest: wedge between north-west and south-west, denser in clumps.
                 float a = Rand(2.3f, 4.1f);
-                float r = Rand(s.RiverRadius + 20f, RimRadius(a) - 8f);
+                float r = Rand(s_RiverApprox + 20f, RimRadius(a) - 8f);
                 var p = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
                 if (Mathf.PerlinNoise(p.x * 0.02f + 3f, p.y * 0.02f) < 0.38f || !FreeSpot(p)) continue;
                 AddTree(p, Rand() < 0.72f ? 0 : 1, Rand(0.8f, 1.35f));
@@ -839,7 +883,7 @@ namespace Remains.Editor
             for (int i = 0, tries = 0; i < s.ScatteredTrees && tries < s.ScatteredTrees * 30; tries++)
             {
                 float a = Rand(0f, Mathf.PI * 2f);
-                float r = Rand(s.RiverRadius + 20f, RimRadius(a) - 8f);
+                float r = Rand(s_RiverApprox + 20f, RimRadius(a) - 8f);
                 var p = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
                 if (!FreeSpot(p) || Mathf.PerlinNoise(p.x * 0.03f, p.y * 0.03f + 5f) < 0.5f) continue;
                 AddTree(p, Rand() < 0.35f ? 0 : 1, Rand(0.8f, 1.3f));

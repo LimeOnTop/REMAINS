@@ -1,0 +1,172 @@
+[
+ {
+  "name": "Tower_V4_0",
+  "triangles": 22008,
+  "shells": 1822,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Tower_V4_1",
+  "triangles": 21612,
+  "shells": 1789,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Tower_V4_2",
+  "triangles": 21708,
+  "shells": 1797,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Tower_V4_3",
+  "triangles": 21720,
+  "shells": 1798,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Tower_V4_4",
+  "triangles": 21768,
+  "shells": 1802,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Tower_V4_5",
+  "triangles": 21648,
+  "shells": 1792,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Tower_V4_6",
+  "triangles": 21672,
+  "shells": 1794,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Tower_V4_7",
+  "triangles": 22092,
+  "shells": 1829,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Gatehouse_V4",
+  "triangles": 41220,
+  "shells": 3435,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Chain_Link_Pair",
+  "triangles": 336,
+  "shells": 2,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Chain_Pulley",
+  "triangles": 384,
+  "shells": 10,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Pulley_Yoke",
+  "triangles": 36,
+  "shells": 3,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Pulley_Floor_Stand",
+  "triangles": 36,
+  "shells": 3,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Leaf_Chain_Eye",
+  "triangles": 156,
+  "shells": 2,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Capstan_Chain_Coil",
+  "triangles": 1680,
+  "shells": 5,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Capstan_Base",
+  "triangles": 396,
+  "shells": 13,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Capstan_Bars",
+  "triangles": 136,
+  "shells": 6,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ }
+]

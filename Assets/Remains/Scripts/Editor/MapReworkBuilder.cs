@@ -264,16 +264,17 @@ public static class MapReworkBuilder {
   var env=Group(field,"Meadow_V4");
   var grassMat=Mat("Grass_V4",Shader.Find("Remains/MeadowV3"),m=>{m.SetColor("_BaseColor",Color.white);m.SetFloat("_DetailStrength",0);m.SetFloat("_WindStrength",.09f);});
   var chunks=new Dictionary<Vector2Int,(List<Vector3> v,List<int> t,List<Color> c,List<Vector2> uv)>();int clumps=0;
-  for(float z=-300;z<312;z+=1.05f)for(float x=-306;x<306;x+=1.05f){
-   var p=new Vector2(x+R(-.45f,.45f),z+R(-.45f,.45f));float r=Rad(p);if(r>Rim(Ang(p))-2)continue;if(RouteDist(p)<4.2f||CampBlend(p)>.3f||OnApproach(p))continue;
+  // Dense, tall meadow (v4.1): ~0.8 m spacing, 10-14 blades up to ~1 m.
+  for(float z=-300;z<312;z+=.8f)for(float x=-306;x<306;x+=.8f){
+   var p=new Vector2(x+R(-.35f,.35f),z+R(-.35f,.35f));float r=Rad(p);if(r>Rim(Ang(p))-2)continue;if(RouteDist(p)<4.2f||CampBlend(p)>.3f||OnApproach(p))continue;
    if(!GroundHit(p,out var hit)||hit.point.y<8.3f||hit.normal.y<.8f)continue;
    if(r<90&&Physics.Raycast(hit.point+Vector3.up*2.3f,Vector3.down,out var topHit,3f)&&topHit.collider!=groundCollider)continue;
    if(!Free(p,.2f))continue;
-   float patch=Mathf.PerlinNoise(p.x*.071f+3,p.y*.071f+8);if(patch<.2f||R(0,1)>.9f)continue;
+   float patch=Mathf.PerlinNoise(p.x*.071f+3,p.y*.071f+8);if(patch<.1f||R(0,1)>.96f)continue;
    var key=new Vector2Int(Mathf.FloorToInt(p.x/32),Mathf.FloorToInt(p.y/32));if(!chunks.TryGetValue(key,out var ch)){ch=(new List<Vector3>(),new List<int>(),new List<Color>(),new List<Vector2>());chunks[key]=ch;}
    Color baseC=Grass(p);Color dark=baseC*R(.55f,.7f);dark.a=1;Color light=Color.Lerp(baseC*1.35f,new Color(.70f,.78f,.36f),R(.1f,.4f));light.a=1;
-   float height=R(.32f,.62f)*(patch>.7f?1.3f:1);clumps++;int blades=rng.Next(7,11);
-   for(int b=0;b<blades;b++){float a=R(0,Mathf.PI*2);var dx=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a))*R(.04f,.075f);var bend=new Vector3(-Mathf.Sin(a),0,Mathf.Cos(a))*R(.06f,.22f);var foot=hit.point+new Vector3(R(-.3f,.3f),-.02f,R(-.3f,.3f));float h=height*R(.55f,1.2f);int k=ch.v.Count;
+   float height=R(.5f,.85f)*(patch>.65f?1.25f:1);clumps++;int blades=rng.Next(10,15);
+   for(int b=0;b<blades;b++){float a=R(0,Mathf.PI*2);var dx=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a))*R(.05f,.085f);var bend=new Vector3(-Mathf.Sin(a),0,Mathf.Cos(a))*R(.08f,.28f);var foot=hit.point+new Vector3(R(-.32f,.32f),-.02f,R(-.32f,.32f));float h=height*R(.55f,1.2f);int k=ch.v.Count;
     ch.v.AddRange(new[]{foot-dx,foot+dx,foot+Vector3.up*h*.55f+bend*.35f-dx*.6f,foot+Vector3.up*h*.55f+bend*.35f+dx*.6f,foot+Vector3.up*h+bend});
     ch.t.AddRange(new[]{k,k+2,k+1,k+1,k+2,k+3,k+2,k+4,k+3});var mid=Color.Lerp(dark,light,.6f);ch.c.AddRange(new[]{dark,dark,mid,mid,light});ch.uv.AddRange(new[]{Vector2.zero,Vector2.zero,new Vector2(0,.55f),new Vector2(0,.55f),Vector2.up});}
    // Occasional seed stalk or wildflower above the clump.
@@ -282,7 +283,7 @@ public static class MapReworkBuilder {
     for(int q=0;q<4;q++){float a=q*Mathf.PI/2+R(0,.4f);var o=new Vector3(Mathf.Cos(a),R(-.2f,.25f),Mathf.Sin(a))*.07f;var o2=new Vector3(-Mathf.Sin(a),0,Mathf.Cos(a))*.035f;int f=ch.v.Count;ch.v.AddRange(new[]{top,top+o+o2,top+o-o2});ch.t.AddRange(new[]{f,f+1,f+2});ch.c.AddRange(new[]{fc,fc,fc});ch.uv.AddRange(new[]{Vector2.up,Vector2.up,Vector2.up});}}
   }
   foreach(var pair in chunks){var mesh=MakeMesh("Grass_V4_"+pair.Key.x+"_"+pair.Key.y,pair.Value.v,pair.Value.t,pair.Value.c,pair.Value.uv);var go=MeshObject(env,"Grass_"+pair.Key.x+"_"+pair.Key.y,mesh,grassMat);var mr=go.GetComponent<MeshRenderer>();mr.shadowCastingMode=ShadowCastingMode.Off;
-   var lod=go.AddComponent<LODGroup>();lod.SetLODs(new[]{new LOD(.035f,new Renderer[]{mr})});lod.RecalculateBounds();}
+   var lod=go.AddComponent<LODGroup>();lod.SetLODs(new[]{new LOD(.045f,new Renderer[]{mr})});lod.RecalculateBounds();}
   // Draped earth paths with a broken edge (same routes as before, following the sunken trail).
   var pv=new List<Vector3>();var pt=new List<int>();var pc=new List<Color>();var puv=new List<Vector2>();
   foreach(var route in routes)for(int s=1;s<route.Length;s++){Vector2 a=route[s-1],b=route[s];int steps=Mathf.Max(1,Mathf.CeilToInt(Vector2.Distance(a,b)));Vector2 dir=(b-a).normalized,side=new Vector2(-dir.y,dir.x);

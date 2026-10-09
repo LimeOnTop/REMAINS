@@ -1,0 +1,25 @@
+{
+    "name": "Remains.Gameplay",
+    "rootNamespace": "Remains",
+    "references": [
+        "Blocks.Gameplay.Core",
+        "Blocks.Gameplay.Shooter",
+        "Unity.Netcode.Runtime",
+        "Unity.Netcode.Components",
+        "Unity.InputSystem",
+        "Unity.Cinemachine",
+        "Unity.Collections",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication",
+        "Unity.Services.Vivox"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

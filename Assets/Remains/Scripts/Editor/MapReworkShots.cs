@@ -13,6 +13,12 @@ public static class MapReworkShots {
   new Shot("trees_plateau",new Vector3(150,32,-230),new Vector3(170,15,-120),60),
   new Shot("river_top",new Vector3(-20,170,10),new Vector3(-110,0,40),55),
  };
+ // Ad-hoc views: each entry is name, camera position, look target, fov.
+ public static void CaptureViews(string dir,string prefix,(string name,Vector3 pos,Vector3 look,float fov)[] views,int w=1600,int h=900){
+  Directory.CreateDirectory(dir);var go=new GameObject("__ShotCamera");var cam=go.AddComponent<Camera>();cam.farClipPlane=2500;cam.nearClipPlane=.05f;cam.clearFlags=CameraClearFlags.SolidColor;cam.backgroundColor=new Color(.63f,.73f,.80f);
+  try{foreach(var s in views){go.transform.position=s.pos;go.transform.LookAt(s.look);cam.fieldOfView=s.fov;Render(cam,Path.Combine(dir,prefix+"_"+s.name+".jpg"),w,h);}}finally{Object.DestroyImmediate(go);}
+ }
+ static void Render(Camera cam,string path,int w,int h){var rt=new RenderTexture(w,h,24){antiAliasing=4};cam.targetTexture=rt;cam.Render();RenderTexture.active=rt;var tex=new Texture2D(w,h,TextureFormat.RGB24,false);tex.ReadPixels(new Rect(0,0,w,h),0,0);tex.Apply();File.WriteAllBytes(path,tex.EncodeToJPG(88));cam.targetTexture=null;RenderTexture.active=null;Object.DestroyImmediate(tex);Object.DestroyImmediate(rt);}
  public static void Capture(string dir,string prefix,int w=1600,int h=900){
   Directory.CreateDirectory(dir);
   var go=new GameObject("__ShotCamera");var cam=go.AddComponent<Camera>();cam.farClipPlane=2500;cam.nearClipPlane=.3f;cam.clearFlags=CameraClearFlags.SolidColor;cam.backgroundColor=new Color(.63f,.73f,.80f);

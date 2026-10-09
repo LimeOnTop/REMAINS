@@ -1,0 +1,211 @@
+[
+ {
+  "name": "Cliff_Rock_0",
+  "triangles": 66,
+  "shells": 3,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Cliff_Rock_1",
+  "triangles": 64,
+  "shells": 3,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Cliff_Rock_2",
+  "triangles": 88,
+  "shells": 4,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Cliff_Rock_3",
+  "triangles": 44,
+  "shells": 2,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Boulder_0",
+  "triangles": 22,
+  "shells": 1,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Boulder_1",
+  "triangles": 38,
+  "shells": 2,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Boulder_2",
+  "triangles": 26,
+  "shells": 1,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Boulder_3",
+  "triangles": 52,
+  "shells": 2,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Stone_0",
+  "triangles": 14,
+  "shells": 1,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Stone_1",
+  "triangles": 12,
+  "shells": 1,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Stone_2",
+  "triangles": 14,
+  "shells": 1,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Pine_0",
+  "triangles": 52,
+  "shells": 4,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Pine_1",
+  "triangles": 68,
+  "shells": 5,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Pine_2",
+  "triangles": 64,
+  "shells": 5,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Oak_0",
+  "triangles": 160,
+  "shells": 7,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Oak_1",
+  "triangles": 210,
+  "shells": 9,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Oak_2",
+  "triangles": 184,
+  "shells": 8,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Bush_0",
+  "triangles": 76,
+  "shells": 4,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Bush_1",
+  "triangles": 68,
+  "shells": 4,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ }
+]

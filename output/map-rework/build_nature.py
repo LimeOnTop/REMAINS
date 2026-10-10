@@ -140,42 +140,97 @@ def rock_mats(t, normal):
 ROCK_SET = ['Rock_Shadow', 'Rock_Mid', 'Rock_Light', 'Rock_Moss']
 
 
+# Natural rocks (v2): a noise-displaced icosphere with soft horizontal strata, decimated to large facets.
+# Separate RNG so the trees keep their shapes when the rocks change.
+rrng = random.Random(4127)
+from mathutils import noise
+
+
+def natural_shell(size, strata=0.0, ratio=.1, subdiv=3, rough=.28, flat_bottom=.8, face=1.0, top=1.0):
+    sx, sy, sz = size
+    off = Vector((rrng.uniform(0, 100), rrng.uniform(0, 100), rrng.uniform(0, 100)))
+    bm = bmesh.new()
+    bmesh.ops.create_icosphere(bm, subdivisions=subdiv, radius=1.0)
+    lean = Vector((rrng.uniform(-.15, .15), rrng.uniform(-.1, .1), 0))
+    for v in bm.verts:
+        d = v.co.normalized()
+        n = noise.fractal(d * 1.3 + off, 1.0, 2.0, 4)
+        n2 = noise.noise(d * 3.1 + off * .5)
+        r = 1 + rough * n + .08 * n2
+        p = Vector((d.x * sx * r, d.y * sy * r, d.z * sz * r))
+        if strata > 0:  # terraces: pull heights toward bands, stronger on the steep sides
+            band = sz * .32
+            q = round(p.z / band) * band
+            side = 1 - abs(d.z)
+            p.z = p.z + (q - p.z) * strata * side
+        p += lean * (p.z / sz)
+        p.z = max(p.z, -sz * flat_bottom)
+        # Sheer front/back faces and a flattened crown read as broken rock rather than a pebble.
+        lim = sy * face * (1 + .12 * noise.noise(Vector((p.x, p.z, 7)) * 1.7 + off))
+        p.y = max(-lim, min(lim, p.y))
+        p.z = min(p.z, sz * top * (1 + .1 * noise.noise(Vector((p.x, p.y, 3)) * 2 + off)))
+        v.co = p
+    me = bpy.data.meshes.new('tmp_rock')
+    bm.to_mesh(me)
+    bm.free()
+    ob = bpy.data.objects.new('tmp_rock', me)
+    bpy.context.scene.collection.objects.link(ob)
+    mod = ob.modifiers.new('dec', 'DECIMATE')
+    mod.ratio = ratio
+    mod.use_collapse_triangulate = True
+    dg = bpy.context.evaluated_depsgraph_get()
+    ev = ob.evaluated_get(dg)
+    out = bmesh.new()
+    out.from_mesh(ev.to_mesh())
+    ev.to_mesh_clear()
+    bpy.data.objects.remove(ob)
+    bpy.data.meshes.remove(me)
+    bmesh.ops.remove_doubles(out, verts=list(out.verts), dist=1e-4)
+    bmesh.ops.dissolve_degenerate(out, edges=list(out.edges), dist=1e-4)
+    bmesh.ops.recalc_face_normals(out, faces=list(out.faces))
+    return out
+
+
+def shell_ok(bm):
+    return all(e.is_manifold for e in bm.edges) and all(f.calc_area() > 1e-6 for f in bm.faces)
+
+
+def good_shell(*a, **k):
+    for _ in range(8):
+        bm = natural_shell(*a, **k)
+        if shell_ok(bm):
+            return bm
+        bm.free()
+    return natural_shell(*a, **dict(k, ratio=.2))
+
+
 def make_cliff(i):
-    """Tall stratified cliff chunk ~ 1 x 1 x 1 unit-ish, scaled in Unity to fit banks."""
-    """Angular cliff chunk: 2-4 tilted blocky columns side by side, ~2 wide x 1 deep x 2 tall."""
+    """Massive stratified cliff block about 2 wide, 1.2 deep, 2.3 tall (bottom at z=0)."""
     b = Builder(f'Cliff_Rock_{i}')
-    cols = rng.randint(2, 4)
-    x = -1.0
-    for k in range(cols):
-        w = 2.0 / cols * rng.uniform(.9, 1.25)
-        d = rng.uniform(.6, 1.0)
-        h = rng.uniform(1.4, 2.3)
-        cx, cy = x + w / 2, rng.uniform(-.12, .12)
-        tilt = rng.uniform(-.12, .12)
-        pts = []
-        for zz, s in ((0, 1.0), (h * rng.uniform(.45, .6), rng.uniform(.95, 1.08)), (h, rng.uniform(.6, .85))):
-            for sx in (-1, 1):
-                for sy in (-1, 1):
-                    pts.append(Vector((cx + sx * w / 2 * s * rng.uniform(.8, 1.05) + tilt * zz, cy + sy * d / 2 * s * rng.uniform(.75, 1.05),
-                                       zz + (rng.uniform(-.18, .1) if zz else 0))))
-        pts.append(Vector((cx + rng.uniform(-.2, .2), cy + rng.uniform(-.1, .1), h + rng.uniform(.0, .2))))
-        b.add(hull(pts), ROCK_SET, by_height=rock_mats)
-        x += w * .82
+    sh = good_shell((1.15, .75, 1.25), strata=.85, ratio=.17, rough=.33, face=.72, top=.8)
+    bmesh.ops.translate(sh, verts=list(sh.verts), vec=(0, 0, 1.15))
+    b.add(sh, ROCK_SET, by_height=rock_mats)
+    if i % 2 == 0:  # a lower shoulder block fused to one side
+        sh2 = good_shell((.65, .55, .6), strata=.7, ratio=.2, rough=.3, face=.75, top=.8)
+        bmesh.ops.translate(sh2, verts=list(sh2.verts), vec=(rrng.choice((-.7, .7)), rrng.uniform(-.1, .15), .45))
+        b.add(sh2, ROCK_SET, by_height=rock_mats)
     return b
 
 
 def make_boulder(i):
     b = Builder(f'Boulder_{i}')
-    sx, sy, sz = rng.uniform(.9, 1.2), rng.uniform(.7, 1.0), rng.uniform(.55, .8)
-    b.add(hull(ellipsoid_cloud(rng.randint(14, 22), sx * .5, sy * .5, sz * .5, .22, flat_bottom=-sz * .32)), ROCK_SET, by_height=rock_mats)
-    if i % 2 == 1:  # a smaller split-off chunk leaning on the main stone
-        b.add(hull(ellipsoid_cloud(12, .22, .2, .18, .2, center=(sx * .45, 0, -sz * .2), flat_bottom=-sz * .32)), ROCK_SET, by_height=rock_mats)
+    sx, sy, sz = rrng.uniform(.5, .62), rrng.uniform(.42, .52), rrng.uniform(.3, .4)
+    b.add(good_shell((sx, sy, sz), strata=.3, ratio=.16, rough=.3, flat_bottom=.7, face=.85, top=.85), ROCK_SET, by_height=rock_mats)
+    if i % 2 == 1:
+        sh = good_shell((.22, .2, .17), ratio=.2, subdiv=2, rough=.25, flat_bottom=.6)
+        bmesh.ops.translate(sh, verts=list(sh.verts), vec=(sx * .9, 0, -sz * .35))
+        b.add(sh, ROCK_SET, by_height=rock_mats)
     return b
 
 
 def make_stone(i):
     b = Builder(f'Stone_{i}')
-    b.add(hull(ellipsoid_cloud(9, .5, .4, .28, .25, flat_bottom=-.12)), ROCK_SET, weights=[1, 3, 2, 0])
+    b.add(good_shell((.5, .4, .25), ratio=.25, subdiv=2, rough=.25, flat_bottom=.55), ROCK_SET, weights=[1, 3, 2, 0])
     return b
 
 

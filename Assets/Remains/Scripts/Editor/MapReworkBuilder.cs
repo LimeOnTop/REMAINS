@@ -123,15 +123,18 @@ public static class MapReworkBuilder {
  static GameObject MeshObject(Transform parent,string name,Mesh mesh,Material mat,bool collider=false){var g=Group(parent,name).gameObject;g.AddComponent<MeshFilter>().sharedMesh=mesh;g.AddComponent<MeshRenderer>().sharedMaterial=mat;if(collider)g.AddComponent<MeshCollider>().sharedMesh=mesh;g.isStatic=true;return g;}
 
  static Dictionary<string,Material> nature=new Dictionary<string,Material>();
- static Material NatureMat(string name){if(nature.TryGetValue(name,out var m))return m;var src=AssetDatabase.LoadAllAssetsAtPath(Models+"Pine_0.glb").OfType<Material>().Concat(AssetDatabase.LoadAllAssetsAtPath(Models+"Oak_2.glb").OfType<Material>()).Concat(AssetDatabase.LoadAllAssetsAtPath(Models+"Cliff_Rock_0.glb").OfType<Material>()).FirstOrDefault(x=>x.name==name);
-  Color c=src?src.GetColor("baseColorFactor"):Color.magenta;
-  m=Mat(name,Shader.Find("Universal Render Pipeline/Lit"),x=>{x.SetColor("_BaseColor",c);x.SetFloat("_Smoothness",.06f);x.enableInstancing=true;});nature[name]=m;return m;}
+ static Material NatureMat(Material src){string name=src.name;if(nature.TryGetValue(name,out var m))return m;
+  Color c=src.HasProperty("baseColorFactor")?src.GetColor("baseColorFactor"):Color.magenta;
+  // Underwater life uses the sway shader (kelp bends, fish tails wag); everything else is plain URP Lit.
+  if(name.StartsWith("Sea_")){bool fishMat=name.StartsWith("Sea_Fish");m=Mat(name,Shader.Find("Remains/UnderwaterSway"),x=>{x.SetColor("_BaseColor",c);x.SetFloat("_Mode",fishMat?1:0);x.SetFloat("_Height",2.4f);x.SetFloat("_Sway",.32f);x.SetFloat("_Speed",fishMat?1:.7f);x.enableInstancing=true;});}
+  else m=Mat(name,Shader.Find("Universal Render Pipeline/Lit"),x=>{x.SetColor("_BaseColor",c);x.SetFloat("_Smoothness",.06f);x.enableInstancing=true;});
+  nature[name]=m;return m;}
  // Instantiates a nature model so that its footprint is centred on p and its base rests at y (scale per axis: width, height, depth).
  static GameObject Place(Transform parent,string model,Vector3 pos,Vector3 scale,float yaw,float tiltX=0,float tiltZ=0,bool collider=true){
   var src=AssetDatabase.LoadAssetAtPath<GameObject>(Models+model+".glb");var mf=src.GetComponentInChildren<MeshFilter>();var mesh=mf.sharedMesh;var b=mesh.bounds;
   var g=new GameObject(model);g.transform.SetParent(parent,false);g.transform.position=pos;g.transform.rotation=Quaternion.Euler(tiltX,yaw,tiltZ);
   var child=new GameObject("mesh");child.transform.SetParent(g.transform,false);child.transform.localScale=scale;child.transform.localPosition=Vector3.Scale(new Vector3(-b.center.x,-b.min.y,-b.center.z),scale);
-  child.AddComponent<MeshFilter>().sharedMesh=mesh;var mr=child.AddComponent<MeshRenderer>();mr.sharedMaterials=mf.GetComponent<MeshRenderer>().sharedMaterials.Select(x=>NatureMat(x.name)).ToArray();
+  child.AddComponent<MeshFilter>().sharedMesh=mesh;var mr=child.AddComponent<MeshRenderer>();mr.sharedMaterials=mf.GetComponent<MeshRenderer>().sharedMaterials.Select(NatureMat).ToArray();
   if(collider)child.AddComponent<MeshCollider>().sharedMesh=mesh;g.isStatic=true;child.isStatic=true;return g;}
 
  // ---- Builders ----
@@ -149,9 +152,10 @@ public static class MapReworkBuilder {
   foreach(Transform t in field.Cast<Transform>().Where(x=>x.name=="Mouth_Waterfall").ToList())UnityEngine.Object.DestroyImmediate(t.gameObject);
   Land(groundGo);Escarpment();Water();Ropes();
   Physics.SyncTransforms();
-  var natureRoot=Group(field,"Nature_V4");Rocks(natureRoot);Trees(natureRoot);
+  var natureRoot=Group(field,"Nature_V4");Rocks(natureRoot);Trees(natureRoot);Underwater(natureRoot);Fish(natureRoot);
   Physics.SyncTransforms();
   Meadow();
+  var fp=GameObject.Find("FirstPersonCamera");if(fp&&!fp.GetComponent<Remains.UnderwaterView>())fp.AddComponent<Remains.UnderwaterView>();
   foreach(var c in new[]{"Attack_Camp_West","Attack_Camp_South","Attack_Camp_East"}){var t=field.Find(c);if(t){var p=new Vector2(t.position.x,t.position.z);t.position=new Vector3(p.x,Ground(p),p.y);}}
   AssetDatabase.SaveAssets();EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);
  }
@@ -196,18 +200,54 @@ public static class MapReworkBuilder {
  }
  static bool Wet(Vector2 p)=>Ground(p)<7.02f;
  static void Water(){
-  var v=new List<Vector3>();var t=new List<int>();const float s=2;
-  for(float z=-306;z<318;z+=s)for(float x=-316;x<316;x+=s){var p=new Vector2(x+1,z+1);if(Rad(p)>Rim(Ang(p))+3)continue;
-   if(!(Wet(new Vector2(x,z))||Wet(new Vector2(x+s,z))||Wet(new Vector2(x,z+s))||Wet(new Vector2(x+s,z+s))||Wet(p)))continue;int k=v.Count;v.Add(new Vector3(x,7,z));v.Add(new Vector3(x,7,z+s));v.Add(new Vector3(x+s,7,z+s));v.Add(new Vector3(x+s,7,z));t.AddRange(new[]{k,k+1,k+2,k,k+2,k+3});}
-  var water=AssetDatabase.LoadAssetAtPath<Material>("Assets/Remains/BattlefieldV2/Turquoise_River.mat");var foam=AssetDatabase.LoadAssetAtPath<Material>("Assets/Remains/BattlefieldV2/Foam.mat");
-  MeshObject(field,"Ring_River_Two_Mouths",MakeMesh("River_V4",v,t),water);
-  var ripples=Group(field,"Water_Ripples");for(int i=0;i<600;i++){var p=P(R(0,Mathf.PI*2),R(85,300));if(!Wet(p)||!Wet(p+Vector2.one*2)||!Wet(p-Vector2.one*2))continue;var g=GameObject.CreatePrimitive(PrimitiveType.Cube);UnityEngine.Object.DestroyImmediate(g.GetComponent<Collider>());g.name="Ripple";g.transform.SetParent(ripples,false);g.transform.position=new Vector3(p.x,7.03f,p.y);g.transform.localScale=new Vector3(R(.4f,1.8f),.015f,.08f);g.transform.rotation=Quaternion.Euler(0,R(0,180),0);g.GetComponent<Renderer>().sharedMaterial=foam;g.isStatic=true;}
-  // Waterfalls where each mouth channel leaves the rim: a ribbon draped over the lip.
+  // Indexed 1.5 m grid so the Gerstner swell in WaterSoT bends smoothly; only cells near wet ground are kept.
+  const float st=1.5f;var v=new List<Vector3>();var t=new List<int>();var index=new Dictionary<Vector2Int,int>();
+  int Vert(int i,int j){var key=new Vector2Int(i,j);if(!index.TryGetValue(key,out int k)){k=v.Count;index[key]=k;v.Add(new Vector3(i*st,7,j*st));}return k;}
+  for(int j=-206;j<214;j++)for(int i=-212;i<212;i++){float x=i*st,z=j*st;var c=new Vector2(x+st/2,z+st/2);if(Rad(c)>Rim(Ang(c))+3)continue;
+   if(!(Wet(new Vector2(x,z))||Wet(new Vector2(x+st,z))||Wet(new Vector2(x,z+st))||Wet(new Vector2(x+st,z+st))||Wet(c)))continue;
+   int a0=Vert(i,j),b0=Vert(i,j+1),c0=Vert(i+1,j+1),d0=Vert(i+1,j);t.AddRange(new[]{a0,b0,c0,a0,c0,d0});}
+  var water=Mat("Water_SoT",Shader.Find("Remains/WaterSoT"),m=>{m.SetColor("_ShallowColor",new Color(.25f,.85f,.76f));m.SetColor("_DeepColor",new Color(.03f,.33f,.46f));m.SetFloat("_DepthRange",5);m.SetFloat("_Visibility",4.2f);m.SetFloat("_WaveHeight",.16f);m.SetFloat("_FoamDistance",.9f);});
+  var river=MeshObject(field,"Ring_River_Two_Mouths",MakeMesh("River_V4",v,t),water);var rr=river.GetComponent<MeshRenderer>();rr.shadowCastingMode=ShadowCastingMode.Off;rr.receiveShadows=true;
+  var fall=Mat("Waterfall_V4",Shader.Find("Remains/Waterfall"),m=>{});
+  // Waterfalls where each mouth channel leaves the rim: a ribbon draped over the lip (uv.y runs downward).
   for(int m=0;m<2;m++){var l=mouthLine[m];var h=mouthHalf[m];int i=0;while(i<l.Count-1&&Rad(l[i])<Rim(Ang(l[i]))-1)i++;var lip=l[i];float a=Ang(lip);float half=h[i]+1;var side=new Vector2(Mathf.Cos(a),-Mathf.Sin(a));var outward=new Vector2(Mathf.Sin(a),Mathf.Cos(a));
-   var fv=new List<Vector3>();var ft=new List<int>();float[] fy={7,4,-6,-22,-42};float[] fo={-3,.5f,2.5f,4.5f,7};int cols=10;
-   for(int k=0;k<fy.Length;k++)for(int j=0;j<=cols;j++){var q=lip+side*Mathf.Lerp(-half,half,j/(float)cols)+outward*(fo[k]+Mathf.Sin(j*1.7f+k)*.5f);fv.Add(new Vector3(q.x,fy[k],q.y));}
-   for(int k=0;k<fy.Length-1;k++)for(int j=0;j<cols;j++){int a0=k*(cols+1)+j,b0=a0+1,d0=a0+cols+1,e0=d0+1;ft.AddRange(new[]{a0,d0,b0,b0,d0,e0,a0,b0,d0,b0,e0,d0});}
-   var wf=MeshObject(field,"Mouth_Waterfall",MakeMesh("Waterfall_V4_"+m,fv,ft),water);wf.GetComponent<MeshRenderer>().shadowCastingMode=ShadowCastingMode.Off;}
+   var fv=new List<Vector3>();var ft=new List<int>();var fu=new List<Vector2>();float[] fy={7,4,-6,-22,-42};float[] fo={-3,.5f,2.5f,4.5f,7};int cols=10;
+   for(int k=0;k<fy.Length;k++)for(int j=0;j<=cols;j++){var q=lip+side*Mathf.Lerp(-half,half,j/(float)cols)+outward*(fo[k]+Mathf.Sin(j*1.7f+k)*.5f);fv.Add(new Vector3(q.x,fy[k],q.y));fu.Add(new Vector2(j/(float)cols,(7-fy[k])/49f));}
+   for(int k=0;k<fy.Length-1;k++)for(int j=0;j<cols;j++){int a0=k*(cols+1)+j,b0=a0+1,d0=a0+cols+1,e0=d0+1;ft.AddRange(new[]{a0,d0,b0,b0,d0,e0});}
+   var wf=MeshObject(field,"Mouth_Waterfall",MakeMesh("Waterfall_V4_"+m,fv,ft,null,fu),fall);wf.GetComponent<MeshRenderer>().shadowCastingMode=ShadowCastingMode.Off;}
+ }
+ // Riverbed life: kelp clumps (deeper water, thicker near banks), starfish and pebbles on the sand, a few sunken boulders.
+ static void Underwater(Transform root){
+  var g=Group(root,"Riverbed");int kelp=0,stars=0,stones=0,boulders=0;
+  for(int i=0;i<30000&&(kelp<520||stars<220||stones<420||boulders<70);i++){
+   var p=P(R(-Mathf.PI,Mathf.PI),R(80,300));if(Rad(p)>Rim(Ang(p))-4)continue;float gy=Ground(p);if(gy>6.1f)continue;
+   if(OnApproach(p)&&Mathf.Abs(p.x)<9)continue; // keep the bridge piers clear
+   if(!GroundHit(p,out var hit)||hit.point.y>6.2f)continue;float depth=7-hit.point.y;
+   float patch=Mathf.PerlinNoise(p.x*.06f+11,p.y*.06f+4);
+   if(kelp<520&&depth>1.3f&&patch>.45f&&Free(p,.8f)){float s=R(.7f,1.25f)*Mathf.Min(1,depth/3.2f);Place(g,"Kelp_"+rng.Next(3),hit.point-Vector3.up*.05f,Vector3.one*s,R(0,360),0,0,false);Occupy(p,.8f);kelp++;continue;}
+   if(stars<220&&R(0,1)<.25f&&Free(p,.3f)){Place(g,"Starfish_"+rng.Next(3),hit.point+Vector3.up*.01f,Vector3.one*R(.8f,1.3f),R(0,360),R(-6,6),R(-6,6),false);Occupy(p,.3f);stars++;continue;}
+   if(boulders<70&&R(0,1)<.08f&&Free(p,2)){float s=R(1.2f,2.6f);Place(g,"Boulder_"+rng.Next(4),hit.point-Vector3.up*s*.15f,new Vector3(s,s*R(.7f,1),s),R(0,360),R(-8,8),R(-8,8));Occupy(p,2);boulders++;continue;}
+   if(stones<420&&Free(p,.25f)){Place(g,"Stone_"+rng.Next(3),hit.point-Vector3.up*.04f,Vector3.one*R(.3f,.8f),R(0,360),R(-10,10),R(-10,10),false);Occupy(p,.25f);stones++;}
+  }
+  File.WriteAllText("output/map-rework/underwater.json",$"{{\"kelp\":{kelp},\"starfish\":{stars},\"stones\":{stones},\"boulders\":{boulders}}}");
+ }
+ // Scripted fish loops: rings around the island at varied radius/depth and out-and-back loops up each river mouth.
+ static float SwimHeight(Vector2 p,float frac){float bed=Ground(p);return Mathf.Clamp(Mathf.Lerp(bed+.5f,6.45f,frac),bed+.4f,6.45f);}
+ static void Fish(Transform root){
+  var g=Group(root,"Fish_Schools");var loops=new List<Vector3[]>();
+  for(int k=0;k<6;k++){float lane=R(-.25f,.25f),frac=R(.25f,.8f),ph=R(0,6.28f),wig=R(2,5);bool reverse=k%2==1;var pts=new List<Vector3>();
+   for(int a=0;a<360;a+=3){float ang=a*Mathf.Deg2Rad;var probe=P(ang,Inner0(ang));float rin=Shore(probe)+2.5f,rout=Outer(probe)-3.5f;float r=Mathf.Lerp(rin,rout,.5f+lane+.18f*Mathf.Sin(ang*wig+ph));var p=P(ang,r);pts.Add(new Vector3(p.x,SwimHeight(p,frac),p.y));}
+   if(reverse)pts.Reverse();loops.Add(pts.ToArray());}
+  for(int m=0;m<2;m++){var l=mouthLine[m];var h=mouthHalf[m];foreach(float frac in new[]{.35f,.7f}){var outbound=new List<Vector3>();var back=new List<Vector3>();
+   for(int i=2;i<l.Count;i++){if(Rad(l[i])>Rim(Ang(l[i]))-18)break;var d=(l[i]-l[i-1]).normalized;var side=new Vector2(-d.y,d.x);float off=h[i]*.35f;
+    var a=l[i]+side*off;var b=l[i]-side*off;outbound.Add(new Vector3(a.x,SwimHeight(a,frac),a.y));back.Add(new Vector3(b.x,SwimHeight(b,frac),b.y));}
+   back.Reverse();outbound.AddRange(back);if(outbound.Count>6)loops.Add(outbound.ToArray());}}
+  int total=0;
+  for(int k=0;k<loops.Count;k++){var school=Group(g,"School_"+k);var fs=school.gameObject.AddComponent<Remains.FishSchool>();int n=rng.Next(4,9);int kind=rng.Next(3);
+   fs.path=loops[k];fs.speed=R(1.6f,2.8f);fs.fish=new Transform[n];fs.offsets=new Vector3[n];fs.phases=new float[n];
+   for(int i=0;i<n;i++){var f=Place(school,"Fish_"+(R(0,1)<.8f?kind:rng.Next(3)),loops[k][0],Vector3.one*R(1.4f,2.0f),0,0,0,false);f.isStatic=false;foreach(Transform c in f.transform)c.gameObject.isStatic=false;
+    fs.fish[i]=f.transform;fs.offsets[i]=new Vector3(R(-1.2f,1.2f),R(-.35f,.35f),-i*R(.6f,1.1f));fs.phases[i]=R(0,6.28f);}total+=n;}
+  File.WriteAllText("output/map-rework/fish.json",$"{{\"schools\":{loops.Count},\"fish\":{total}}}");
  }
  // Finds the toe (water line) and lip (top) of the outer bank along a ray from the island outwards.
  static bool OuterBank(float a,out Vector2 toe,out Vector2 lip,out float lipH){toe=lip=Vector2.zero;lipH=0;var probe=P(a,Outer0(a));float o=Outer(probe);float r0=o-10;bool found=false;
@@ -229,16 +269,24 @@ public static class MapReworkBuilder {
  static void Occupy(Vector2 p,float radius){var c=Cell(p);if(!occupied.TryGetValue(c,out var list))occupied[c]=list=new List<Vector3>();list.Add(new Vector3(p.x,radius,p.y));}
  static bool NearRope(Vector2 p,float d)=>ropeSpots.Any(s=>Vector2.Distance(s,p)<d);
  static bool OnApproach(Vector2 p)=>Mathf.Abs(p.x)<24&&p.y<-70&&p.y>-226;
+ // A bank face built from stacked, overlapping natural rocks: wide tiers (never stretched into columns), each set back a little,
+ // with smaller boulders at the waterline.
+ static void BankRocks(Transform parent,Vector2 toe,Vector2 landward,float lipH){
+  float bottom=2.6f,top=lipH+R(-.6f,.8f),H=top-bottom;int tiers=Mathf.Max(1,Mathf.CeilToInt(H/5f));float th=H/tiers;
+  float yawBase=Mathf.Atan2(-landward.x,-landward.y)*Mathf.Rad2Deg;
+  for(int k=0;k<tiers;k++){var p=toe+landward*(k*.9f+R(-.4f,.4f))+new Vector2(-landward.y,landward.x)*R(-1.2f,1.2f);float w=R(2.8f,4.2f);float h=Mathf.Min((th+1.4f)/2.3f,w*1.25f);
+   Place(parent,"Cliff_Rock_"+rng.Next(4),new Vector3(p.x,bottom+k*th-.7f,p.y),new Vector3(w,h,R(2.6f,3.8f)),yawBase+R(-28,28),R(-9,9),R(-7,7));}
+  if(R(0,1)<.6f){var q=toe-landward*R(.8f,2f)+new Vector2(-landward.y,landward.x)*R(-2,2);float s=R(1.6f,3.2f);Place(parent,"Boulder_"+rng.Next(4),new Vector3(q.x,R(5.2f,6.4f),q.y),new Vector3(s,s*R(.8f,1.1f),s),R(0,360),R(-10,10),R(-10,10));}
+ }
  static void Rocks(Transform root){
   occupied.Clear();var banks=Group(root,"River_Bank_Rocks");
   // Outer bank: stratified cliff blocks from the river bed up past the lip, facing the castle.
-  int outerCount=0;for(float a=-Mathf.PI;a<Mathf.PI;a+=.0215f){float aa=a+R(-.006f,.006f);if(!OuterBank(aa,out var toe,out var lip,out float lipH))continue;var mid=(toe+lip)/2;if(Mouth(mid)<3||Mouth(lip)<2||NearRope(mid,4)||OnApproach(mid))continue;
-   var dir=(lip-toe).normalized;var basePos=toe+dir*R(-.6f,.6f);float bottom=2.6f;float top=lipH+R(-.4f,1.2f);float yaw=Mathf.Atan2(-dir.x,-dir.y)*Mathf.Rad2Deg+R(-10,10);
-   Place(banks,"Cliff_Rock_"+rng.Next(4),new Vector3(basePos.x,bottom,basePos.y),new Vector3(R(2.0f,3.3f),(top-bottom)/2.3f,R(2.2f,3.4f)),yaw,R(-5,5),R(-4,4));Occupy(lip,3.5f);outerCount++;}
+  int outerCount=0;for(float a=-Mathf.PI;a<Mathf.PI;a+=.03f){float aa=a+R(-.01f,.01f);if(!OuterBank(aa,out var toe,out var lip,out float lipH))continue;var mid=(toe+lip)/2;if(Mouth(mid)<3||Mouth(lip)<2||NearRope(mid,4)||OnApproach(mid))continue;
+   var dir=(lip-toe).normalized;BankRocks(banks,toe+dir*R(-.6f,.6f),dir,lipH);Occupy(lip,3.5f);outerCount++;}
   // Mouth channel banks, both sides.
-  for(int m=0;m<2;m++){var l=mouthLine[m];var h=mouthHalf[m];for(int i=1;i<l.Count;i++){float len=Vector2.Distance(l[i-1],l[i]);for(float s=0;s<len;s+=R(4.2f,5.4f)){float t=s/len;var c=Vector2.Lerp(l[i-1],l[i],t);if(Rad(c)<Outer(c)+2||Rad(c)>Rim(Ang(c))-5)continue;var d=(l[i]-l[i-1]).normalized;var side=new Vector2(-d.y,d.x);float half=Mathf.Lerp(h[i-1],h[i],t);
+  for(int m=0;m<2;m++){var l=mouthLine[m];var h=mouthHalf[m];for(int i=1;i<l.Count;i++){float len=Vector2.Distance(l[i-1],l[i]);for(float s=0;s<len;s+=R(5.5f,7f)){float t=s/len;var c=Vector2.Lerp(l[i-1],l[i],t);if(Rad(c)<Outer(c)+2||Rad(c)>Rim(Ang(c))-5)continue;var d=(l[i]-l[i-1]).normalized;var side=new Vector2(-d.y,d.x);float half=Mathf.Lerp(h[i-1],h[i],t);
      foreach(int sg in new[]{-1,1}){Vector2 toe=c,lip=c;float lipH=0;bool ok=false;bool f=false;for(float o=half-6;o<half+10;o+=.5f){var q=c+side*sg*o;float gh=Ground(q);if(!f&&gh>6.6f){toe=q;f=true;}if(f&&gh>10&&gh>Ground(q+side*sg*1.5f)-.15f){lip=q;lipH=gh;ok=true;break;}}if(!ok)continue;
-      float yaw=Mathf.Atan2(-side.x*sg,-side.y*sg)*Mathf.Rad2Deg+R(-10,10);Place(banks,"Cliff_Rock_"+rng.Next(4),new Vector3(toe.x,2.6f,toe.y),new Vector3(R(2,3.2f),(lipH+R(-.4f,1)-2.6f)/2.3f,R(2.2f,3.2f)),yaw,R(-5,5),R(-4,4));Occupy(lip,3.5f);}}}}
+      BankRocks(banks,toe,side*sg,lipH);Occupy(lip,3.5f);}}}}
   // Island: outcrops on the slope above the beach and boulders on the sand.
   int tries=0,outcrops=0,boulders=0;while(outcrops<95&&tries++<4000){float a=R(-Mathf.PI,Mathf.PI);if(BridgeMask(a)<.5f)continue;float top=Inner0(a)-15,beachTop=Mathf.Max(top+5,Shore(P(a,Inner0(a)))-1-BeachWidth(a));var p=P(a,R(top+1,beachTop));if(!GroundHit(p,out var hit)||hit.normal.y<.55f)continue;
    Place(banks,"Cliff_Rock_"+rng.Next(4),hit.point-Vector3.up*R(.6f,1.4f),Vector3.one*R(1.1f,2.2f)+new Vector3(0,R(0,.6f),0),Mathf.Atan2(p.x,p.y-8)*Mathf.Rad2Deg+180+R(-25,25),R(-8,8),R(-8,8));outcrops++;}

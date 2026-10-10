@@ -44,6 +44,10 @@ Shader "Remains/GroundV4" {
   float3 scol=col*(1+(hash(floor(xz*14))-.5)*.08+sin(xz.x*1.3+xz.y*.7+vnoise(xz*.3)*4)*.03);
   float3 c=lerp(col,gcol*grass+pcol*path+scol*sand,_Detail);
   float3 lit=c*(.46+.54*nd*l.shadowAttenuation)*lerp(half3(1,1,1),l.color,.35);
+  // Underwater caustics: two drifting cell layers; light gathers where their distance fields meet.
+  float under=saturate((6.9-i.world.y)*1.5)*step(.5,_Detail);
+  if(under>0){float t=_Time.y;float ca=cells(xz*.42+float2(sin(t*.31),cos(t*.27))*1.3).x;float cb=cells(xz*.58+float2(-t*.11,t*.09)).x;
+   float caus=saturate(1-abs(ca-cb)*7);caus=caus*caus*caus;lit+=l.color*caus*under*.22*l.shadowAttenuation;lit*=lerp(1,.88,under);}
   return half4(lit,1);}
  ENDHLSL
  }

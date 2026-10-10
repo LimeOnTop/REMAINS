@@ -1,40 +1,7 @@
 [
  {
   "name": "Cliff_Rock_0",
-  "triangles": 66,
-  "shells": 3,
-  "non_manifold_edges": 0,
-  "boundary_edges": 0,
-  "loose_verts": 0,
-  "degenerate_faces": 0,
-  "inward_shells": 0,
-  "ok": true
- },
- {
-  "name": "Cliff_Rock_1",
-  "triangles": 64,
-  "shells": 3,
-  "non_manifold_edges": 0,
-  "boundary_edges": 0,
-  "loose_verts": 0,
-  "degenerate_faces": 0,
-  "inward_shells": 0,
-  "ok": true
- },
- {
-  "name": "Cliff_Rock_2",
-  "triangles": 88,
-  "shells": 4,
-  "non_manifold_edges": 0,
-  "boundary_edges": 0,
-  "loose_verts": 0,
-  "degenerate_faces": 0,
-  "inward_shells": 0,
-  "ok": true
- },
- {
-  "name": "Cliff_Rock_3",
-  "triangles": 44,
+  "triangles": 118,
   "shells": 2,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -44,8 +11,41 @@
   "ok": true
  },
  {
+  "name": "Cliff_Rock_1",
+  "triangles": 54,
+  "shells": 1,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Cliff_Rock_2",
+  "triangles": 118,
+  "shells": 2,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Cliff_Rock_3",
+  "triangles": 54,
+  "shells": 1,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
   "name": "Boulder_0",
-  "triangles": 22,
+  "triangles": 50,
   "shells": 1,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -56,7 +56,7 @@
  },
  {
   "name": "Boulder_1",
-  "triangles": 38,
+  "triangles": 66,
   "shells": 2,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -67,7 +67,7 @@
  },
  {
   "name": "Boulder_2",
-  "triangles": 26,
+  "triangles": 50,
   "shells": 1,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -78,7 +78,7 @@
  },
  {
   "name": "Boulder_3",
-  "triangles": 52,
+  "triangles": 66,
   "shells": 2,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -89,7 +89,7 @@
  },
  {
   "name": "Stone_0",
-  "triangles": 14,
+  "triangles": 20,
   "shells": 1,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -100,7 +100,7 @@
  },
  {
   "name": "Stone_1",
-  "triangles": 12,
+  "triangles": 20,
   "shells": 1,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -111,7 +111,7 @@
  },
  {
   "name": "Stone_2",
-  "triangles": 14,
+  "triangles": 20,
   "shells": 1,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -122,7 +122,7 @@
  },
  {
   "name": "Pine_0",
-  "triangles": 52,
+  "triangles": 60,
   "shells": 4,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -133,7 +133,7 @@
  },
  {
   "name": "Pine_1",
-  "triangles": 68,
+  "triangles": 70,
   "shells": 5,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -144,7 +144,7 @@
  },
  {
   "name": "Pine_2",
-  "triangles": 64,
+  "triangles": 70,
   "shells": 5,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -155,18 +155,7 @@
  },
  {
   "name": "Oak_0",
-  "triangles": 160,
-  "shells": 7,
-  "non_manifold_edges": 0,
-  "boundary_edges": 0,
-  "loose_verts": 0,
-  "degenerate_faces": 0,
-  "inward_shells": 0,
-  "ok": true
- },
- {
-  "name": "Oak_1",
-  "triangles": 210,
+  "triangles": 206,
   "shells": 9,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -176,8 +165,8 @@
   "ok": true
  },
  {
-  "name": "Oak_2",
-  "triangles": 184,
+  "name": "Oak_1",
+  "triangles": 182,
   "shells": 8,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
@@ -187,9 +176,20 @@
   "ok": true
  },
  {
+  "name": "Oak_2",
+  "triangles": 154,
+  "shells": 7,
+  "non_manifold_edges": 0,
+  "boundary_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
   "name": "Bush_0",
-  "triangles": 76,
-  "shells": 4,
+  "triangles": 56,
+  "shells": 3,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
   "loose_verts": 0,
@@ -199,8 +199,8 @@
  },
  {
   "name": "Bush_1",
-  "triangles": 68,
-  "shells": 4,
+  "triangles": 34,
+  "shells": 2,
   "non_manifold_edges": 0,
   "boundary_edges": 0,
   "loose_verts": 0,

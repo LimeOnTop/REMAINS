@@ -1,0 +1,92 @@
+[
+ {
+  "name": "Kelp_0",
+  "triangles": 468,
+  "shells": 22,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Kelp_1",
+  "triangles": 314,
+  "shells": 15,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Kelp_2",
+  "triangles": 480,
+  "shells": 24,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Starfish_0",
+  "triangles": 68,
+  "shells": 6,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Starfish_1",
+  "triangles": 68,
+  "shells": 6,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Starfish_2",
+  "triangles": 68,
+  "shells": 6,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Fish_0",
+  "triangles": 118,
+  "shells": 3,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Fish_1",
+  "triangles": 118,
+  "shells": 3,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ },
+ {
+  "name": "Fish_2",
+  "triangles": 118,
+  "shells": 3,
+  "non_manifold_edges": 0,
+  "loose_verts": 0,
+  "degenerate_faces": 0,
+  "inward_shells": 0,
+  "ok": true
+ }
+]

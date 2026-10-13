@@ -1,0 +1,20 @@
+{
+ "ballista-v6": {
+  "objects": 102,
+  "tris": 4514,
+  "non_manifold": [],
+  "loose": []
+ },
+ "ram-v6": {
+  "objects": 142,
+  "tris": 6768,
+  "non_manifold": [],
+  "loose": []
+ },
+ "catapult-v6": {
+  "objects": 98,
+  "tris": 4792,
+  "non_manifold": [],
+  "loose": []
+ }
+}

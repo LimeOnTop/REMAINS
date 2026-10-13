@@ -1,0 +1,214 @@
+[
+ {
+  "name": "Oak_0",
+  "tris": 740,
+  "non_manifold": 0,
+  "loose": 0,
+  "degenerate": 0,
+  "slots_used": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "slots": [
+   "Nature_Bark_Dark",
+   "Nature_Bark_Light",
+   "Nature_Leaf_Dark",
+   "Nature_Leaf_Mid",
+   "Nature_Leaf_Light",
+   "Nature_Leaf_Autumn"
+  ],
+  "size": [
+   0.586,
+   0.649,
+   0.829
+  ],
+  "ok": true
+ },
+ {
+  "name": "Oak_1",
+  "tris": 740,
+  "non_manifold": 0,
+  "loose": 0,
+  "degenerate": 0,
+  "slots_used": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "slots": [
+   "Nature_Bark_Dark",
+   "Nature_Bark_Light",
+   "Nature_Leaf_Dark",
+   "Nature_Leaf_Mid",
+   "Nature_Leaf_Light",
+   "Nature_Leaf_Autumn"
+  ],
+  "size": [
+   0.659,
+   0.62,
+   0.795
+  ],
+  "ok": true
+ },
+ {
+  "name": "Oak_2",
+  "tris": 660,
+  "non_manifold": 0,
+  "loose": 0,
+  "degenerate": 0,
+  "slots_used": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "slots": [
+   "Nature_Bark_Dark",
+   "Nature_Bark_Light",
+   "Nature_Leaf_Dark",
+   "Nature_Leaf_Mid",
+   "Nature_Leaf_Light",
+   "Nature_Leaf_Autumn"
+  ],
+  "size": [
+   0.597,
+   0.616,
+   0.812
+  ],
+  "ok": true
+ },
+ {
+  "name": "Pine_0",
+  "tris": 124,
+  "non_manifold": 0,
+  "loose": 0,
+  "degenerate": 0,
+  "slots_used": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "slots": [
+   "Nature_Bark_Dark",
+   "Nature_Bark_Light",
+   "Nature_Pine_Dark",
+   "Nature_Pine_Mid",
+   "Nature_Pine_Light"
+  ],
+  "size": [
+   0.687,
+   0.766,
+   1.0
+  ],
+  "ok": true
+ },
+ {
+  "name": "Pine_1",
+  "tris": 144,
+  "non_manifold": 0,
+  "loose": 0,
+  "degenerate": 0,
+  "slots_used": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "slots": [
+   "Nature_Bark_Dark",
+   "Nature_Bark_Light",
+   "Nature_Pine_Dark",
+   "Nature_Pine_Mid",
+   "Nature_Pine_Light"
+  ],
+  "size": [
+   0.616,
+   0.687,
+   1.0
+  ],
+  "ok": true
+ },
+ {
+  "name": "Pine_2",
+  "tris": 144,
+  "non_manifold": 0,
+  "loose": 0,
+  "degenerate": 0,
+  "slots_used": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "slots": [
+   "Nature_Bark_Dark",
+   "Nature_Bark_Light",
+   "Nature_Pine_Dark",
+   "Nature_Pine_Mid",
+   "Nature_Pine_Light"
+  ],
+  "size": [
+   0.665,
+   0.615,
+   1.0
+  ],
+  "ok": true
+ },
+ {
+  "name": "Bush_0",
+  "tris": 400,
+  "non_manifold": 0,
+  "loose": 0,
+  "degenerate": 0,
+  "slots_used": [
+   0,
+   1,
+   2
+  ],
+  "slots": [
+   "Nature_Leaf_Dark",
+   "Nature_Leaf_Mid",
+   "Nature_Leaf_Light"
+  ],
+  "size": [
+   0.588,
+   0.499,
+   0.396
+  ],
+  "ok": true
+ },
+ {
+  "name": "Bush_1",
+  "tris": 240,
+  "non_manifold": 0,
+  "loose": 0,
+  "degenerate": 0,
+  "slots_used": [
+   0,
+   1,
+   2
+  ],
+  "slots": [
+   "Nature_Leaf_Dark",
+   "Nature_Leaf_Mid",
+   "Nature_Leaf_Light"
+  ],
+  "size": [
+   0.62,
+   0.576,
+   0.412
+  ],
+  "ok": true
+ }
+]

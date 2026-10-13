@@ -1,19 +1,19 @@
 [
  {
-  "name": "Cape_Side_Rocks",
-  "tris": 1980,
+  "name": "Cape_Footing_Rocks",
+  "tris": 704,
   "non_manifold": 0,
   "loose": 0
  },
  {
-  "name": "Cape_Arch_Soffit",
-  "tris": 2024,
+  "name": "Cape_Arch",
+  "tris": 1844,
   "non_manifold": 0,
   "loose": 0
  },
  {
   "name": "Cape_Abutment",
-  "tris": 12188,
+  "tris": 12804,
   "non_manifold": 0,
   "loose": 0
  }

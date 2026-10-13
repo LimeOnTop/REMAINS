@@ -44,28 +44,94 @@ def rock(builder, centre, rx, ry, rz, strata=.8, rough=.3, ratio=.14, yaw=0.0):
     builder.add(sh, ROCK_SET, by_height=rock_mats)
 
 
-ARCH = (-114, -88)  # open water under the cape between these z
-sides = Builder('Cape_Side_Rocks')
+# V10: one sculpted rock body instead of stacked boulders. Its top lip follows the measured turf edge of the
+# terrain (cape_edges.json, sampled in Unity) 3 cm below the grass, so the turf runs flush to the rock face.
+# Seen from the river the underside is an asymmetric natural arch (after Durdle Door): it rises from the water on
+# the shore side in a long curve, crowns under the cape and drops steeply into the bridge pier.
+from mathutils import noise as mnoise
+EDGES = json.loads((ROOT / 'output/map-rework/cape_edges.json').read_text())
+Z_A, Z_C, Z_B, CROWN, BED = -117.0, -100.0, -87.6, 10.3, 2.6
+
+
+def soffit(z):
+    if z <= Z_A or z >= Z_B:
+        return BED
+    if z < Z_C:
+        t = (z - Z_A) / (Z_C - Z_A); return BED + (CROWN - BED) * math.sin(math.pi / 2 * t) ** .55
+    t = (z - Z_C) / (Z_B - Z_C); return BED + (CROWN - BED) * math.cos(math.pi / 2 * t) ** .42
+
+
+def edge(z):
+    rows = sorted(EDGES, key=lambda r: abs(r[0] - z))[:2]; r0, r1 = sorted(rows)
+    f = 0 if r1[0] == r0[0] else (z - r0[0]) / (r1[0] - r0[0])
+    L = [r0[i] + (r1[i] - r0[i]) * f for i in range(1, 5)]
+    if z < -119.5:  # inside the shore bank: widen and stay under the bank turf
+        w = 16 + (-119.5 - z) * 1.6; return -w, min(L[1], 16.2) - .5, w, min(L[3], 16.0) - .5
+    return L
+
+
+def fbm(x, y, z, sc=.35):
+    return mnoise.fractal(Vector((x * sc, y * sc, z * sc)) + Vector((31.7, 7.3, 12.9)), 1.0, 2.0, 3)
+
+
+arch = bmesh.new(); rings = []; zs = [-126.0 + i * 1.25 + (crng.uniform(-.35, .35) if 0 < i < 31 else 0) for i in range(32)] + [-86.8]
+K, M = 8, 6
+for z in zs:
+    xl, tl, xr, tr = edge(z); yb = soffit(z); pier = yb < 4
+    if not pier:  # uneven natural soffit, calmer near the springings
+        yb += .55 * fbm(z * .8, 3.3, 9.1) * min(1, (yb - BED) / 3)
+    ring = []
+    for side, xe, te in ((-1, xl, tl), (1, xr, tr)):
+        pts = []
+        for k in range(K + 1):
+            u = (k / K) ** 1.15; y = (te - .03) + (yb - (te - .03)) * u
+            foot = (1.0 if pier else .35) * u ** 1.6 * (2.2 + .8 * fbm(z, y, side * 3))
+            bulge = .35 * math.sin(math.pi * u) + foot
+            fiss = .8 * fbm(z * .9, 0, side * 5) * u  # vertical fissures and buttress ribs
+            n = (fbm(z * 1.3, y * 1.1, side * 7) * 1.3 + fiss) * (0 if k == 0 else (.45 if k == 1 else 1))
+            pts.append((xe + side * (bulge + n), y))
+        ring.append(pts)
+    left, right = ring
+    # Ring order: left face top -> bottom, across the soffit, right face bottom -> top, back across under the turf.
+    poly = left[:]
+    for m in range(1, M):
+        x = left[-1][0] + (right[-1][0] - left[-1][0]) * m / M
+        poly.append((x, yb + (.35 * math.sin(math.pi * m / M) if not pier else 0) + .25 * fbm(x, yb, z)))
+    poly += right[::-1]
+    ytop = min(tl, tr) - .15
+    for m in range(1, M):
+        poly.append((right[0][0] + (left[0][0] - right[0][0]) * m / M, ytop))
+    rings.append([arch.verts.new(U(x, y, z)) for x, y in poly])
+n = len(rings[0])
+for a, b in zip(rings, rings[1:]):
+    for i in range(n):
+        j = (i + 1) % n; arch.faces.new((a[i], a[j], b[j], b[i]))
+arch.faces.new(rings[0][::-1]); arch.faces.new(rings[-1])
+bmesh.ops.triangulate(arch, faces=list(arch.faces)); bmesh.ops.recalc_face_normals(arch, faces=list(arch.faces))
+
+
+def arch_mats(t, nrm):
+    if nrm.z < -.35:
+        return 0
+    if t > .9 and nrm.z > .25:
+        return 3
+    if t < .3:
+        return 0
+    return (1, 2, 1, 0, 2)[int(t * 9 + 3 * crng.random()) % 5]
+
+
+soffit_b = Builder('Cape_Arch')
+soffit_b.add(arch, ROCK_SET, by_height=arch_mats)
+# Footing boulders where the arch rises from the water, plus corner buttresses at the abutment (below).
+sides = Builder('Cape_Footing_Rocks')
 for s in (-1, 1):
-    z = -123.0
-    while z < -80.5:
-        L = crng.uniform(3.2, 4.4); zc = z + L / 2; w = hw(zc)
-        top = 15.75 + crng.uniform(-.15, .55)
-        pier = not (ARCH[0] < zc < ARCH[1])
-        bottom = 2.6 if pier else 10.3 + crng.uniform(-.4, .3)
-        rock(sides, (s * (w - .2), (top + bottom) / 2, zc), crng.uniform(1.6, 2.2), (top - bottom) / 2, L * .62, yaw=crng.uniform(-.15, .15))
-        if pier:  # heavy waterline boulders in front of the piers
-            rock(sides, (s * (w + 2.0 + crng.uniform(0, .8)), 5.2, zc + crng.uniform(-.8, .8)), crng.uniform(1.6, 2.3), crng.uniform(2.0, 2.8), L * .55, strata=.5)
-        z += L * .78
-# Arch ceiling: flattened rocks hanging under the slab so the opening reads as a natural rock arch.
-soffit = Builder('Cape_Arch_Soffit')
-for zc in [ARCH[0] + 2 + i * 3.4 for i in range(8)]:
-    if zc > ARCH[1] - 1.5:
-        break
-    w = hw(zc); x = -w + 1.8
-    while x < w - 1.8:
-        rock(soffit, (x + crng.uniform(-.5, .5), 12.0 + crng.uniform(-.25, .25), zc + crng.uniform(-.6, .6)), crng.uniform(1.9, 2.5), crng.uniform(.75, 1.0), crng.uniform(1.8, 2.3), strata=.3, rough=.25)
-        x += crng.uniform(3.0, 3.8)
+    for zc in (-124.5, -121, -118.2, -115.8):
+        xl, _, xr, _ = edge(zc); xe = xl if s < 0 else xr
+        rock(sides, (xe + s * crng.uniform(2.6, 3.8), crng.uniform(4.2, 5.6), zc + crng.uniform(-.8, .8)), crng.uniform(1.4, 2.2), crng.uniform(1.6, 2.6), crng.uniform(1.6, 2.4), strata=.6)
+    for zc in (-89.5, -87.8):
+        xl, _, xr, _ = edge(zc); xe = xl if s < 0 else xr
+        rock(sides, (xe + s * crng.uniform(2.4, 3.2), crng.uniform(4.0, 5.0), zc), crng.uniform(1.4, 2.0), crng.uniform(1.6, 2.2), crng.uniform(1.4, 2.0), strata=.6)
+soffit = soffit_b
 
 # Cut-stone abutment: main wall up to the road (y 15.85), a lower bearing ledge in front for the deck beams (y 14.8),
 # flagstone paving and kerbs on top. Corner buttress rocks blend it into the side cliffs.
@@ -106,7 +172,7 @@ for zt in [-86.4 + i * 1.3 for i in range(4)]:  # flagstone paving on the road s
 for s in (-1, 1):
     block(min(s * W, s * (W - .5)), max(s * W, s * (W - .5)), 15.8, 16.3, -86.5, -81.25, bevel=.06)  # kerb
 for s in (-1, 1):  # buttress rocks at the abutment corners
-    rock(sides, (s * (W + .9), 8.6, -82.6), 1.9, 6.4, 2.6, strata=.9)
+    rock(sides, (s * (W + .9), 8.4, -83.4), 1.7, 6.2, 2.4, strata=.9)
     rock(sides, (s * (W + 2.6), 4.6, -81.2), 2.1, 2.4, 2.2, strata=.5)
 
 col = bpy.context.collection
@@ -129,7 +195,7 @@ sc.render.resolution_x, sc.render.resolution_y = 1400, 900
 if not sc.world: sc.world = bpy.data.worlds.new('W')
 sc.world.color = (.75, .82, .88)
 cd = bpy.data.cameras.new('c'); cam = bpy.data.objects.new('cam', cd); col.objects.link(cam); sc.camera = cam
-for name, pos, look in (('cape_v9_preview_end', (-26, 20, -66), (0, 10, -88)), ('cape_v9_preview_side', (-48, 18, -122), (0, 9, -98))):
+for name, pos, look in (('cape_v9_preview_end', (-26, 20, -66), (0, 10, -88)), ('cape_v9_preview_side', (-52, 8, -102), (0, 8.5, -102))):
     cam.location = U(*pos); cam.rotation_euler = (U(*look) - U(*pos)).to_track_quat('-Z', 'Y').to_euler()
     sc.render.filepath = str(OUT / (name + '.png')); bpy.ops.render.render(write_still=True)
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT / 'cape_v9.blend'))

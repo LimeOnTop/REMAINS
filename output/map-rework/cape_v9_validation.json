@@ -1,0 +1,20 @@
+[
+ {
+  "name": "Cape_Side_Rocks",
+  "tris": 1980,
+  "non_manifold": 0,
+  "loose": 0
+ },
+ {
+  "name": "Cape_Arch_Soffit",
+  "tris": 2024,
+  "non_manifold": 0,
+  "loose": 0
+ },
+ {
+  "name": "Cape_Abutment",
+  "tris": 12188,
+  "non_manifold": 0,
+  "loose": 0
+ }
+]

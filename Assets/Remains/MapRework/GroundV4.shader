@@ -82,6 +82,9 @@ Shader "Remains/GroundV4" {
    path=pe*(1-sand);grass=saturate(1-path-sand);
   }
   float3 c=lerp(col,gcol*grass+pcol*path+scol*sand,max(_Detail,_StyleV8));
+  // V8: steep faces (cliff skirts, cape sides) read as layered rock instead of vertical grass.
+  if(_StyleV8>.5){float steep=1-smoothstep(.38,.62,n.y);float band=frac(i.world.y*.55+vnoise(xz*.2)*.8);
+   float3 rk=lerp(float3(.17,.16,.14),float3(.30,.29,.26),smoothstep(.2,.8,band))*(.9+.2*vnoise(xz*1.3+i.world.y));c=lerp(c,rk,steep*(1-sand*.6));}
   float3 lit=c*(.46+.54*nd*l.shadowAttenuation)*lerp(half3(1,1,1),l.color,.35);
   // Underwater caustics: two drifting cell layers; light gathers where their distance fields meet.
   float under=saturate((6.9-i.world.y)*1.5)*step(.5,_Detail);

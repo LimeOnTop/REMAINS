@@ -63,7 +63,7 @@ Shader "Remains/GroundV4" {
    gcol=lerp(gcol,fcol,flower*.85);gcol*=1-clover*.1;
    float pe=saturate((path-.5)*2.4+.5+(n1-.5)*.8);
    float3 dirt=lerp(_DirtDark.rgb,_DirtLight.rgb,saturate(vnoise(xz*.18)*.55+vnoise(xz*.9)*.25+path*.35-.12));
-   dirt*=.94+.12*hash(floor(xz*9));
+   dirt*=.93+.1*vnoise(xz*5.3)+.05*vnoise(xz*13.7);
    float2 sp=xz*2.1+(float2(vnoise(xz*3.3),vnoise(xz*3.3+7.7))-.5)*.5;float4 cv=cellv(sp);float has=step(.86,cv.w);float rad=.11+.12*frac(cv.w*37.1);
    float ang=atan2(cv.y,cv.x);float rr=rad*(.8+.2*sin(ang*3+cv.w*40)+.1*sin(ang*5+cv.w*17));
    float stone=has*(1-smoothstep(rr-.025,rr,cv.z));
@@ -71,8 +71,14 @@ Shader "Remains/GroundV4" {
    float2 ld=normalize(l.direction.xz+1e-4);float shade=.62+.55*saturate(dot(cv.xy/rr,ld)*.5+.5);
    dirt*=lerp(.8,1,pe);dirt*=1-.3*ring;dirt=lerp(dirt,lerp(dirt,_PebbleColor.rgb,.7)*(.85+.25*frac(cv.w*13.7))*shade,stone*smoothstep(.3,.8,pe));
    dirt*=1-.07*smoothstep(.45,.7,vnoise(float2(xz.x*.7,xz.y*.7)+vnoise(xz*.2)*3));
-   float bits=step(vnoise(xz*7.3),(1-pe)*.95);
-   pcol=lerp(dirt,gcol*.9,bits*(1-pe));
+   // Cart ruts painted into the blue channel of the paint layer.
+   float rut=paint.a*paint.b/max(paint.g+paint.b,.02);dirt*=1-.26*rut*(.7+.3*vnoise(xz*1.7));
+   // Ragged transition: grass clumps (two noise scales) spill into the dirt, the dirt rim is damper and darker.
+   float bits=step(vnoise(xz*2.1)*.6+vnoise(xz*7.3)*.4,(1-pe)*1.05);
+   dirt*=lerp(.84,1,smoothstep(.12,.55,pe));
+   pcol=lerp(dirt,gcol*.86,bits*(1-pe));
+   // Trampled, slightly dry grass in a halo just outside the trail.
+   float halo=smoothstep(.02,.4,path)*(1-pe);gcol=lerp(gcol,gcol*float3(1.1,.97,.74),halo*.65);
    path=pe*(1-sand);grass=saturate(1-path-sand);
   }
   float3 c=lerp(col,gcol*grass+pcol*path+scol*sand,max(_Detail,_StyleV8));
